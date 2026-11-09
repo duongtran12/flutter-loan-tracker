@@ -29,6 +29,7 @@ class LoanRecord {
   }
 
   LoanRecord copyWith({
+    String? id,
     String? itemName,
     String? borrowerName,
     DateTime? borrowDate,
@@ -38,7 +39,7 @@ class LoanRecord {
     String? imagePath,
   }) {
     return LoanRecord(
-      id: id,
+      id: id ?? this.id,
       itemName: itemName ?? this.itemName,
       borrowerName: borrowerName ?? this.borrowerName,
       borrowDate: borrowDate ?? this.borrowDate,
@@ -47,6 +48,36 @@ class LoanRecord {
       note: note ?? this.note,
       imagePath: imagePath ?? this.imagePath,
     );
+  }
+
+  factory LoanRecord.fromMap(String id, Map<String, dynamic> map) {
+    return LoanRecord(
+      id: id,
+      itemName: map['itemName'] as String? ?? '',
+      borrowerName: map['borrowerName'] as String? ?? '',
+      borrowDate: DateTime.fromMillisecondsSinceEpoch(
+        map['borrowDate'] as int? ?? 0,
+      ),
+      dueDate: DateTime.fromMillisecondsSinceEpoch(map['dueDate'] as int? ?? 0),
+      status: map['status'] == LoanStatus.returned.name
+          ? LoanStatus.returned
+          : LoanStatus.borrowing,
+      note: map['note'] as String? ?? '',
+      imagePath: map['imagePath'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'itemName': itemName,
+      'borrowerName': borrowerName,
+      'borrowDate': borrowDate.millisecondsSinceEpoch,
+      'dueDate': dueDate.millisecondsSinceEpoch,
+      'status': status.name,
+      'note': note,
+      'imagePath': imagePath,
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    };
   }
 }
 
