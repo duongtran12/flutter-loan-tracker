@@ -28,13 +28,19 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
 
   bool get _isEditing => widget.record != null;
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   @override
   void initState() {
     super.initState();
     final record = widget.record;
     final now = DateTime.now();
     _itemController = TextEditingController(text: record?.itemName ?? '');
-    _borrowerController = TextEditingController(text: record?.borrowerName ?? '');
+    _borrowerController = TextEditingController(
+      text: record?.borrowerName ?? '',
+    );
     _noteController = TextEditingController(text: record?.note ?? '');
     _borrowDate = record?.borrowDate ?? DateTime(now.year, now.month, now.day);
     _dueDate = record?.dueDate ?? _borrowDate.add(const Duration(days: 7));
@@ -51,6 +57,7 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
   }
 
   Future<void> _pickImage() async {
+    _dismissKeyboard();
     final image = await _imagePicker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 82,
@@ -63,6 +70,7 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
   }
 
   Future<void> _selectDate({required bool isBorrowDate}) async {
+    _dismissKeyboard();
     final currentDate = isBorrowDate ? _borrowDate : _dueDate;
     final selected = await showDatePicker(
       context: context,
@@ -86,6 +94,7 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
   }
 
   void _save() {
+    _dismissKeyboard();
     if (!_formKey.currentState!.validate()) return;
 
     if (_dueDate.isBefore(_borrowDate)) {
@@ -128,94 +137,113 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
           ),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          children: [
-            _ImagePickerBox(imagePath: _imagePath, onPick: _pickImage),
-            const SizedBox(height: 22),
-            const _FieldLabel('Thông tin món đồ'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _itemController,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Tên món đồ *',
-                prefixIcon: Icon(Icons.inventory_2_outlined),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _dismissKeyboard,
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            children: [
+              _ImagePickerBox(imagePath: _imagePath, onPick: _pickImage),
+              const SizedBox(height: 22),
+              const _FieldLabel('Thông tin món đồ'),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _itemController,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.next,
+                autocorrect: true,
+                enableSuggestions: true,
+                onTapOutside: (_) => _dismissKeyboard(),
+                decoration: const InputDecoration(
+                  labelText: 'Tên món đồ *',
+                  prefixIcon: Icon(Icons.inventory_2_outlined),
+                ),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Vui lòng nhập tên món đồ'
+                    : null,
               ),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? 'Vui lòng nhập tên món đồ'
-                  : null,
-            ),
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: _borrowerController,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Người mượn *',
-                prefixIcon: Icon(Icons.person_outline_rounded),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _borrowerController,
+                keyboardType: TextInputType.name,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.words,
+                autocorrect: true,
+                enableSuggestions: true,
+                onTapOutside: (_) => _dismissKeyboard(),
+                decoration: const InputDecoration(
+                  labelText: 'Người mượn *',
+                  prefixIcon: Icon(Icons.person_outline_rounded),
+                ),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Vui lòng nhập tên người mượn'
+                    : null,
               ),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? 'Vui lòng nhập tên người mượn'
-                  : null,
-            ),
-            const SizedBox(height: 22),
-            const _FieldLabel('Thời gian'),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _DateField(
-                    label: 'Ngày mượn',
-                    value: formatDate(_borrowDate),
-                    onTap: () => _selectDate(isBorrowDate: true),
+              const SizedBox(height: 22),
+              const _FieldLabel('Thời gian'),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DateField(
+                      label: 'Ngày mượn',
+                      value: formatDate(_borrowDate),
+                      onTap: () => _selectDate(isBorrowDate: true),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _DateField(
-                    label: 'Hạn trả',
-                    value: formatDate(_dueDate),
-                    onTap: () => _selectDate(isBorrowDate: false),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _DateField(
+                      label: 'Hạn trả',
+                      value: formatDate(_dueDate),
+                      onTap: () => _selectDate(isBorrowDate: false),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 22),
-            const _FieldLabel('Trạng thái'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<LoanStatus>(
-              initialValue: _status,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.fact_check_outlined),
+                ],
               ),
-              items: const [
-                DropdownMenuItem(
-                  value: LoanStatus.borrowing,
-                  child: Text('Đang mượn'),
+              const SizedBox(height: 22),
+              const _FieldLabel('Trạng thái'),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<LoanStatus>(
+                initialValue: _status,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.fact_check_outlined),
                 ),
-                DropdownMenuItem(
-                  value: LoanStatus.returned,
-                  child: Text('Đã trả'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _status = value);
-              },
-            ),
-            const SizedBox(height: 22),
-            const _FieldLabel('Ghi chú'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _noteController,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'Ví dụ: Có kèm dây nguồn, tình trạng còn mới...',
-                alignLabelWithHint: true,
+                items: const [
+                  DropdownMenuItem(
+                    value: LoanStatus.borrowing,
+                    child: Text('Đang mượn'),
+                  ),
+                  DropdownMenuItem(
+                    value: LoanStatus.returned,
+                    child: Text('Đã trả'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) setState(() => _status = value);
+                },
               ),
-            ),
-          ],
+              const SizedBox(height: 22),
+              const _FieldLabel('Ghi chú'),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _noteController,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                autocorrect: true,
+                enableSuggestions: true,
+                onTapOutside: (_) => _dismissKeyboard(),
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  hintText: 'Ví dụ: Có kèm dây nguồn, tình trạng còn mới...',
+                  alignLabelWithHint: true,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -245,9 +273,16 @@ class _ImagePickerBox extends StatelessWidget {
             ? const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_photo_alternate_outlined, size: 52, color: Color(0xFF3157D5)),
+                  Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 52,
+                    color: Color(0xFF3157D5),
+                  ),
                   SizedBox(height: 10),
-                  Text('Chọn ảnh món đồ', style: TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    'Chọn ảnh món đồ',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   SizedBox(height: 4),
                   Text('Nhấn để mở thư viện ảnh'),
                 ],
@@ -279,7 +314,11 @@ class _ImagePickerBox extends StatelessWidget {
 }
 
 class _DateField extends StatelessWidget {
-  const _DateField({required this.label, required this.value, required this.onTap});
+  const _DateField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
 
   final String label;
   final String value;
@@ -310,9 +349,9 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
     );
   }
 }
