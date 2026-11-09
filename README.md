@@ -11,6 +11,3 @@
 - Tìm kiếm và lọc theo trạng thái
 - Tự nhận biết lượt mượn quá hạn
 
-## Lưu ý
-
-Dữ liệu hiện chưa kết nối cơ sở dữ liệu và sẽ trở về dữ liệu mẫu khi khởi động lại ứng dụng.
