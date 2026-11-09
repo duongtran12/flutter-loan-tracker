@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../models/loan_record.dart';
 
@@ -16,15 +13,14 @@ class LoanFormScreen extends StatefulWidget {
 
 class _LoanFormScreenState extends State<LoanFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _imagePicker = ImagePicker();
 
   late final TextEditingController _itemController;
   late final TextEditingController _borrowerController;
   late final TextEditingController _noteController;
+  late final TextEditingController _imageUrlController;
   late DateTime _borrowDate;
   late DateTime _dueDate;
   late LoanStatus _status;
-  String? _imagePath;
 
   bool get _isEditing => widget.record != null;
 
@@ -42,10 +38,10 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
       text: record?.borrowerName ?? '',
     );
     _noteController = TextEditingController(text: record?.note ?? '');
+    _imageUrlController = TextEditingController(text: record?.imageUrl ?? '');
     _borrowDate = record?.borrowDate ?? DateTime(now.year, now.month, now.day);
     _dueDate = record?.dueDate ?? _borrowDate.add(const Duration(days: 7));
     _status = record?.status ?? LoanStatus.borrowing;
-    _imagePath = record?.imagePath;
   }
 
   @override
@@ -53,20 +49,8 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
     _itemController.dispose();
     _borrowerController.dispose();
     _noteController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    _dismissKeyboard();
-    final image = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 82,
-      maxWidth: 1600,
-    );
-
-    if (image != null && mounted) {
-      setState(() => _imagePath = image.path);
-    }
   }
 
   Future<void> _selectDate({required bool isBorrowDate}) async {
@@ -112,7 +96,9 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
       dueDate: _dueDate,
       status: _status,
       note: _noteController.text.trim(),
-      imagePath: _imagePath,
+      imageUrl: _imageUrlController.text.trim().isEmpty
+          ? null
+          : _imageUrlController.text.trim(),
     );
 
     Navigator.of(context).pop(record);
@@ -146,7 +132,31 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              _ImagePickerBox(imagePath: _imagePath, onPick: _pickImage),
+              _ImagePreview(imageUrl: _imageUrlController.text.trim()),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _imageUrlController,
+                keyboardType: TextInputType.url,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+                onTapOutside: (_) => _dismissKeyboard(),
+                decoration: const InputDecoration(
+                  labelText: 'Đường dẫn ảnh (URL)',
+                  hintText: 'https://example.com/anh.jpg',
+                  prefixIcon: Icon(Icons.link_rounded),
+                ),
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) return null;
+                  final uri = Uri.tryParse(text);
+                  if (uri == null ||
+                      !uri.hasAuthority ||
+                      (uri.scheme != 'http' && uri.scheme != 'https')) {
+                    return 'Vui lòng nhập đường dẫn ảnh http hoặc https';
+                  }
+                  return null;
+                },
+              ),
               const SizedBox(height: 22),
               const _FieldLabel('Thông tin món đồ'),
               const SizedBox(height: 8),
@@ -250,65 +260,56 @@ class _LoanFormScreenState extends State<LoanFormScreen> {
   }
 }
 
-class _ImagePickerBox extends StatelessWidget {
-  const _ImagePickerBox({required this.imagePath, required this.onPick});
+class _ImagePreview extends StatelessWidget {
+  const _ImagePreview({required this.imageUrl});
 
-  final String? imagePath;
-  final VoidCallback onPick;
+  final String imageUrl;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPick,
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        height: 205,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFDDE1EC)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: imagePath == null
-            ? const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 52,
-                    color: Color(0xFF3157D5),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Chọn ảnh món đồ',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  SizedBox(height: 4),
-                  Text('Nhấn để mở thư viện ảnh'),
-                ],
-              )
-            : Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.file(
-                    File(imagePath!),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const Center(
-                      child: Icon(Icons.broken_image_outlined, size: 48),
-                    ),
-                  ),
-                  Positioned(
-                    right: 12,
-                    bottom: 12,
-                    child: FilledButton.tonalIcon(
-                      onPressed: onPick,
-                      icon: const Icon(Icons.edit_outlined),
-                      label: const Text('Đổi ảnh'),
-                    ),
-                  ),
-                ],
-              ),
+    return Container(
+      height: 205,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFDDE1EC)),
       ),
+      clipBehavior: Clip.antiAlias,
+      child: imageUrl.isEmpty
+          ? const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.image_outlined, size: 52, color: Color(0xFF3157D5)),
+                SizedBox(height: 10),
+                Text(
+                  'Nhập đường dẫn ảnh bên dưới',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 4),
+                Text('Ảnh sẽ được xem trước tại đây'),
+              ],
+            )
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const Center(
+                    child: Icon(Icons.broken_image_outlined, size: 48),
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: FilledButton.tonalIcon(
+                    onPressed: null,
+                    icon: const Icon(Icons.link_rounded),
+                    label: const Text('Ảnh từ URL'),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

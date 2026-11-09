@@ -1,15 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../models/loan_record.dart';
 
 class LoanCard extends StatelessWidget {
-  const LoanCard({
-    super.key,
-    required this.record,
-    required this.onTap,
-  });
+  const LoanCard({super.key, required this.record, required this.onTap});
 
   final LoanRecord record;
   final VoidCallback onTap;
@@ -19,13 +13,13 @@ class LoanCard extends StatelessWidget {
     final statusColor = record.isOverdue
         ? const Color(0xFFE55555)
         : record.status == LoanStatus.returned
-            ? const Color(0xFF2F9B69)
-            : const Color(0xFF3157D5);
+        ? const Color(0xFF2F9B69)
+        : const Color(0xFF3157D5);
     final statusText = record.isOverdue
         ? 'Quá hạn'
         : record.status == LoanStatus.returned
-            ? 'Đã trả'
-            : 'Đang mượn';
+        ? 'Đã trả'
+        : 'Đang mượn';
 
     return Material(
       color: Colors.white,
@@ -46,7 +40,7 @@ class LoanCard extends StatelessWidget {
                 child: SizedBox(
                   width: 82,
                   height: 82,
-                  child: record.imagePath == null
+                  child: record.imageUrl == null || record.imageUrl!.isEmpty
                       ? Container(
                           color: const Color(0xFFEEF1FA),
                           child: const Icon(
@@ -55,8 +49,8 @@ class LoanCard extends StatelessWidget {
                             size: 34,
                           ),
                         )
-                      : Image.file(
-                          File(record.imagePath!),
+                      : Image.network(
+                          record.imageUrl!,
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => const ColoredBox(
                             color: Color(0xFFEEF1FA),
@@ -83,7 +77,10 @@ class LoanCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA4BA)),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: Color(0xFF9CA4BA),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 5),
@@ -92,7 +89,10 @@ class LoanCard extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -109,7 +109,10 @@ class LoanCard extends StatelessWidget {
                         const Spacer(),
                         Text(
                           'Hạn ${formatDate(record.dueDate)}',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF69728A)),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF69728A),
+                          ),
                         ),
                       ],
                     ),

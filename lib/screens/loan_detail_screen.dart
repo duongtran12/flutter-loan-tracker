@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../models/loan_record.dart';
@@ -45,7 +43,9 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xóa lượt mượn?'),
-        content: Text('Thông tin “${_record.itemName}” sẽ bị xóa khỏi danh sách.'),
+        content: Text(
+          'Thông tin “${_record.itemName}” sẽ bị xóa khỏi danh sách.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -53,7 +53,9 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE55555)),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFE55555),
+            ),
             child: const Text('Xóa'),
           ),
         ],
@@ -61,7 +63,9 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
     );
 
     if (confirmed == true && mounted) {
-      Navigator.of(context).pop(LoanDetailResult(record: _record, deleted: true));
+      Navigator.of(
+        context,
+      ).pop(LoanDetailResult(record: _record, deleted: true));
     }
   }
 
@@ -81,13 +85,13 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
     final statusText = _record.isOverdue
         ? 'Quá hạn'
         : _record.status == LoanStatus.returned
-            ? 'Đã trả'
-            : 'Đang mượn';
+        ? 'Đã trả'
+        : 'Đang mượn';
     final statusColor = _record.isOverdue
         ? const Color(0xFFE55555)
         : _record.status == LoanStatus.returned
-            ? const Color(0xFF2F9B69)
-            : const Color(0xFF3157D5);
+        ? const Color(0xFF2F9B69)
+        : const Color(0xFF3157D5);
 
     return PopScope(
       canPop: false,
@@ -136,7 +140,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
               borderRadius: BorderRadius.circular(24),
               child: SizedBox(
                 height: 260,
-                child: _record.imagePath == null
+                child: _record.imageUrl == null || _record.imageUrl!.isEmpty
                     ? const ColoredBox(
                         color: Color(0xFFE9EDF8),
                         child: Icon(
@@ -145,8 +149,8 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                           color: Color(0xFF6F7A96),
                         ),
                       )
-                    : Image.file(
-                        File(_record.imagePath!),
+                    : Image.network(
+                        _record.imageUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => const ColoredBox(
                           color: Color(0xFFE9EDF8),
@@ -163,19 +167,25 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                   child: Text(
                     _record.itemName,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Text(
                     statusText,
-                    style: TextStyle(color: statusColor, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: statusColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -226,7 +236,11 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.label, required this.value});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -243,9 +257,18 @@ class _InfoRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: Color(0xFF737B91), fontSize: 13)),
+              Text(
+                label,
+                style: const TextStyle(color: Color(0xFF737B91), fontSize: 13),
+              ),
               const SizedBox(height: 3),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),

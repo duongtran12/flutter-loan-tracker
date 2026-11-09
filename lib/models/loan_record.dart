@@ -9,7 +9,7 @@ class LoanRecord {
     required this.dueDate,
     required this.status,
     this.note = '',
-    this.imagePath,
+    this.imageUrl,
   });
 
   final String id;
@@ -19,7 +19,7 @@ class LoanRecord {
   final DateTime dueDate;
   final LoanStatus status;
   final String note;
-  final String? imagePath;
+  final String? imageUrl;
 
   bool get isOverdue {
     final now = DateTime.now();
@@ -36,7 +36,7 @@ class LoanRecord {
     DateTime? dueDate,
     LoanStatus? status,
     String? note,
-    String? imagePath,
+    String? imageUrl,
   }) {
     return LoanRecord(
       id: id ?? this.id,
@@ -46,7 +46,7 @@ class LoanRecord {
       dueDate: dueDate ?? this.dueDate,
       status: status ?? this.status,
       note: note ?? this.note,
-      imagePath: imagePath ?? this.imagePath,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 
@@ -63,7 +63,7 @@ class LoanRecord {
           ? LoanStatus.returned
           : LoanStatus.borrowing,
       note: map['note'] as String? ?? '',
-      imagePath: map['imagePath'] as String?,
+      imageUrl: map['imageUrl'] as String? ?? map['imagePath'] as String?,
     );
   }
 
@@ -75,7 +75,7 @@ class LoanRecord {
       'dueDate': dueDate.millisecondsSinceEpoch,
       'status': status.name,
       'note': note,
-      'imagePath': imagePath,
+      'imageUrl': imageUrl,
       'updatedAt': DateTime.now().millisecondsSinceEpoch,
     };
   }
